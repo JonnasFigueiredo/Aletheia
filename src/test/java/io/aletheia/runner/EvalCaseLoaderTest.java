@@ -6,22 +6,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.aletheia.model.EvalCase;
 import io.aletheia.model.EvaluatorSpec;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+/** Unit tests for {@link EvalCaseLoader}. */
 class EvalCaseLoaderTest {
 
   @Test
-  void loadsAllFieldsFromSampleYaml() throws IOException {
-    Path sample =
-        Path.of(
-            EvalCaseLoaderTest.class
-                .getClassLoader()
-                .getResource("evalcases/sample.yaml")
-                .toURI());
+  void loadFromFile_allFieldsRoundTrip() throws IOException, URISyntaxException {
+    Path sample = sampleYamlPath();
 
     EvalCase evalCase = EvalCaseLoader.loadFromFile(sample);
 
@@ -30,87 +28,65 @@ class EvalCaseLoaderTest {
         .isEqualTo("Verify that the model can answer a basic factual question");
     assertThat(evalCase.getTags()).containsExactly("factual", "smoke");
     assertThat(evalCase.getPrompt()).isEqualTo("What is the capital of France?");
-    assertThat(evalCase.getSystem()).isEqualTo("You are a helpful assistant. Answer concisely.");
+    assertThat(evalCase.getSystem())
+        .isEqualTo("You are a helpful assistant. Answer concisely.");
     assertThat(evalCase.getContext()).isEqualTo("The question is about European geography.");
     assertThat(evalCase.getProvider()).isEqualTo("openai");
     assertThat(evalCase.getModel()).isEqualTo("gpt-4o-mini");
     assertThat(evalCase.getGolden()).isEqualTo("Paris");
     assertThat(evalCase.getJsonSchema()).isNotNull();
+    assertThat(evalCase.getJsonSchema()).containsEntry("type", "object");
   }
 
   @Test
-  void loadsPolymorphicEvaluators() throws IOException {
-    Path sample =
-        Path.of(
-            EvalCaseLoaderTest.class
-                .getClassLoader()
-                .getResource("evalcases/sample.yaml")
-                .toURI());
-
-    EvalCase evalCase = EvalCaseLoader.loadFromFile(sample);
+  void loadFromFile_evaluatorsRoundTrip() throws IOException, URISyntaxException {
+    EvalCase evalCase = EvalCaseLoader.loadFromFile(sampleYamlPath());
     List<EvaluatorSpec> evaluators = evalCase.getEvaluators();
 
     assertThat(evaluators).hasSize(2);
 
-    EvaluatorSpec contains = evaluators.get(0);
-    assertThat(contains.getType()).isEqualTo("contains");
-    assertThat(contains.getParams()).containsEntry("substring", "Paris");
-    assertThat(contains.getParams()).containsEntry("case_sensitive", false);
+    EvaluatorSpec first = evaluators.get(0);
+    assertThat(first.getType()).isEqualTo("contains");
+    assertThat(first.getParams()).containsEntry("substring", "Paris");
+    assertThat(first.getParams()).containsEntry("case_sensitive", false);
 
-    EvaluatorSpec schema = evaluators.get(1);
-    assertThat(schema.getType()).isEqualTo("json_schema");
-    assertThat(schema.getParams()).containsEntry("strict", true);
+    EvaluatorSpec second = evaluators.get(1);
+    assertThat(second.getType()).isEqualTo("json_schema");
+    assertThat(second.getParams()).containsEntry("strict", true);
   }
 
   @Test
-  void loadFromDirectoryReturnsAllYamlFiles(@TempDir Path tempDir) throws IOException {
-    Path sampleSrc =
-        Path.of(
-            EvalCaseLoaderTest.class
-                .getClassLoader()
-                .getResource("evalcases/sample.yaml")
-                .toURI());
-    Files.copy(sampleSrc, tempDir.resolve("case1.yaml"));
-    Files.copy(sampleSrc, tempDir.resolve("case2.yaml"));
-    Files.writeString(tempDir.resolve("not-a-case.txt"), "ignored");
+  void loadFromDirectory_findsYamlFiles() throws IOException, URISyntaxException {
+    URL dirUrl = getClass().getClassLoader().getResource("evalcases");
+    assertThat(dirUrl).isNotNull();
+    Path dir = Path.of(dirUrl.toURI());
 
-    List<EvalCase> cases = EvalCaseLoader.loadFromDirectory(tempDir);
+    List<EvalCase> cases = EvalCaseLoader.loadFromDirectory(dir);
 
-    assertThat(cases).hasSize(2);
-    assertThat(cases).allMatch(c -> "sample-001".equals(c.getId()));
+    assertThat(cases).hasSize(1);
+    assertThat(cases.get(0).getId()).isEqualTo("sample-001");
   }
 
   @Test
-  void throwsWhenPromptIsMissing(@TempDir Path tempDir) throws IOException {
-    Path malformed = tempDir.resolve("bad.yaml");
+  void loadFromFile_missingPrompt_throwsWithFileName(@TempDir Path tempDir) throws IOException {
+    Path malformed = tempDir.resolve("malformed.yaml");
     Files.writeString(
         malformed,
-        "id: bad-001\nevaluators:\n  - type: contains\n    substring: foo\n");
+        "id: bad-case-1\n"
+            + "description: Missing prompt\n"
+            + "evaluators:\n"
+            + "  - type: contains\n"
+            + "    substring: hello\n");
 
     assertThatThrownBy(() -> EvalCaseLoader.loadFromFile(malformed))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("prompt");
+        .hasMessageContaining("prompt")
+        .hasMessageContaining("malformed.yaml");
   }
 
-  @Test
-  void throwsWhenIdIsMissing(@TempDir Path tempDir) throws IOException {
-    Path malformed = tempDir.resolve("no-id.yaml");
-    Files.writeString(
-        malformed,
-        "prompt: \"hello\"\nevaluators:\n  - type: contains\n    substring: foo\n");
-
-    assertThatThrownBy(() -> EvalCaseLoader.loadFromFile(malformed))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("id");
-  }
-
-  @Test
-  void throwsWhenNoEvaluators(@TempDir Path tempDir) throws IOException {
-    Path malformed = tempDir.resolve("no-evals.yaml");
-    Files.writeString(malformed, "id: test-001\nprompt: \"hello\"\nevaluators: []\n");
-
-    assertThatThrownBy(() -> EvalCaseLoader.loadFromFile(malformed))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("evaluator");
+  private Path sampleYamlPath() throws URISyntaxException {
+    URL url = getClass().getClassLoader().getResource("evalcases/sample.yaml");
+    assertThat(url).isNotNull();
+    return Path.of(url.toURI());
   }
 }

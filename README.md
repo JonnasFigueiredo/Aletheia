@@ -1,3 +1,1 @@
-# Aletheia
-
-Java 17 LLM testing framework.
+# Aletheia — Java LLM Evaluation Framework
