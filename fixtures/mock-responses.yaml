@@ -18,3 +18,23 @@
   raw:
     model: mock-model
     finish_reason: stop
+
+- id: runner-pass-001
+  match: runner-pass
+  response: "contains-target"
+  tokens_in: 8
+  tokens_out: 4
+  latency_ms: 20
+  raw:
+    model: mock-model
+    finish_reason: stop
+
+- id: runner-fail-001
+  match: runner-fail
+  response: "no match here"
+  tokens_in: 8
+  tokens_out: 5
+  latency_ms: 25
+  raw:
+    model: mock-model
+    finish_reason: stop

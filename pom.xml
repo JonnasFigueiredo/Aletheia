@@ -145,6 +145,13 @@
         <version>${surefire.version}</version>
         <configuration>
           <argLine>-javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar</argLine>
+          <includes>
+            <include>**/*Test.java</include>
+            <include>**/Test*.java</include>
+            <include>**/*Tests.java</include>
+            <include>**/*TestCase.java</include>
+            <include>**/AletheiaTestSuite.java</include>
+          </includes>
         </configuration>
       </plugin>
 
