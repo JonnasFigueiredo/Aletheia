@@ -18,6 +18,9 @@
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <!-- Pass-through properties for eval system — overridden via -D on the command line. -->
+    <aletheia.baseline.enforce>false</aletheia.baseline.enforce>
+    <aletheia.cases.dir>evalcases</aletheia.cases.dir>
 
     <!-- Dependencies -->
     <jackson.version>2.17.1</jackson.version>
@@ -144,7 +147,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${surefire.version}</version>
         <configuration>
-          <argLine>-javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar</argLine>
+          <argLine>-javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar -Daletheia.baseline.enforce=${aletheia.baseline.enforce} -Daletheia.cases.dir=${aletheia.cases.dir}</argLine>
           <includes>
             <include>**/*Test.java</include>
             <include>**/Test*.java</include>

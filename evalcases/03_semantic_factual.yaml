@@ -1,0 +1,11 @@
+id: semantic-factual-001
+description: Factual Q&A verified via semantic similarity against a golden answer
+tags:
+  - smoke
+  - semantic
+prompt: "Who wrote 'The Old Man and the Sea'?"
+system: "You are a knowledgeable assistant. Answer concisely."
+golden: "Ernest Hemingway"
+evaluators:
+  - type: semantic_similarity
+    threshold: 0.7

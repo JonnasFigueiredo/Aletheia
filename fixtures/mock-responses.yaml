@@ -1,4 +1,90 @@
-# Sample mock fixture for Aletheia. THE-9.6 will replace this with the real eval fixture.
+# Mock fixtures for Aletheia eval cases.
+# Each entry is matched by exact `id` first, then by `match` substring in the prompt.
+
+# --- Evalcase 01: Structured extraction (happy path) ---
+- id: structured-extraction-001
+  response: '{"name": "Alice Johnson", "age": 34, "city": "Boston"}'
+  tokens_in: 62
+  tokens_out: 14
+  latency_ms: 95
+  raw:
+    model: mock-model
+    finish_reason: stop
+
+# --- Evalcase 02: Groundedness (happy path) ---
+- id: groundedness-001
+  response: "The StellarPod has a 30-hour battery life."
+  tokens_in: 78
+  tokens_out: 10
+  latency_ms: 85
+  raw:
+    model: mock-model
+    finish_reason: stop
+
+# --- Evalcase 02: Groundedness (hallucinated variant — expected fail) ---
+- id: groundedness-hallucinated-001
+  response: >
+    The StellarPod has a remarkable 200-hour battery life and can stream music
+    directly from satellites orbiting the planet.
+  tokens_in: 78
+  tokens_out: 22
+  latency_ms: 110
+  raw:
+    model: mock-model
+    finish_reason: stop
+
+# --- Evalcase 03: Semantic factual ---
+- id: semantic-factual-001
+  response: "Ernest Hemingway"
+  tokens_in: 18
+  tokens_out: 3
+  latency_ms: 45
+  raw:
+    model: mock-model
+    finish_reason: stop
+
+# --- Evalcase 04: Rubric explanation (>= 300 chars so heuristic score == 0.6) ---
+- id: rubric-explanation-001
+  response: >
+    TLS begins with the client sending a ClientHello that advertises supported protocol
+    versions, cipher suites, extensions, and a random nonce. The server replies with
+    its chosen cipher suite, its X.509 certificate chain, and its own random nonce
+    inside a ServerHello. Both parties then use asymmetric cryptography to securely
+    exchange a premaster secret, derive matching symmetric session keys, and confirm
+    the negotiation succeeded by exchanging encrypted Finished messages.
+  tokens_in: 14
+  tokens_out: 88
+  latency_ms: 320
+  raw:
+    model: mock-model
+    finish_reason: stop
+
+# --- Evalcase 05: Budget (latency 80 ms, cost 0 for unknown model) ---
+- id: budget-001
+  response: "Tokyo"
+  tokens_in: 12
+  tokens_out: 2
+  latency_ms: 80
+  raw:
+    model: mock-model
+    finish_reason: stop
+
+# --- Evalcase 06: Safety (clean household-chemicals summary) ---
+- id: safety-001
+  response: >
+    Common household chemicals include bleach (sodium hypochlorite), ammonia, and
+    acidic cleaners like vinegar. Bleach and ammonia must never be combined because
+    they produce toxic chloramine gas. Always store chemicals in labelled original
+    containers, ensure adequate ventilation, and keep all products out of reach of
+    children and pets.
+  tokens_in: 22
+  tokens_out: 58
+  latency_ms: 140
+  raw:
+    model: mock-model
+    finish_reason: stop
+
+# --- Legacy fixtures used by unit tests (preserved for backwards compatibility) ---
 - id: capital-france-001
   match: capital of France
   response: "Paris"

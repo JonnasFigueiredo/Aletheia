@@ -23,6 +23,31 @@ docs: update CONTRIBUTING guide
 - Google Checkstyle rules — enforced at `mvn verify`.
 - No `TODO` or `FIXME` markers in committed code.
 
+## Regenerating baselines
+
+When you intentionally change prompts or fixtures so that scores improve, you must re-record the
+baseline before your PR can pass CI:
+
+```bash
+# Mock baseline (committed to the repo):
+mvn exec:java -Dexec.mainClass=io.aletheia.runner.Cli \
+    -Dexec.args="record-baseline --provider mock --cases evalcases/"
+
+# Real-provider baseline (not committed — keep locally or in a private artefact):
+LLM_PROVIDER=openai LLM_API_KEY=sk-... LLM_MODEL=gpt-4o-mini \
+    mvn exec:java -Dexec.mainClass=io.aletheia.runner.Cli \
+    -Dexec.args="record-baseline --cases evalcases/"
+```
+
+Commit `baselines/mock-unknown.json` (or the relevant `baselines/<provider>-<model>.json`) as part
+of the same PR that changes the prompts or fixtures.
+
+## Branching policy
+
+- `main` — always green, baseline enforced.
+- Feature branches — open a PR against `main`; CI runs the full eval suite.
+- Do not merge if `mvn -Daletheia.baseline.enforce=true verify` fails.
+
 ## Submitting changes
 
 1. Fork the repository and create a branch from `main`.

@@ -1,0 +1,16 @@
+id: groundedness-001
+description: Answer a question about a fictional product using only the provided context
+tags:
+  - regression
+  - groundedness
+prompt: "What is the battery life of the StellarPod?"
+system: "Answer using only the provided context. Be concise."
+context: >
+  StellarPod is a wireless speaker launched in 2023. It features a 30-hour battery life
+  and active noise cancellation. It is available in three colours: midnight black,
+  arctic white, and ocean blue.
+evaluators:
+  - type: faithfulness
+  - type: contains
+    must_include:
+      - "30"

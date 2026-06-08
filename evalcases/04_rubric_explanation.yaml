@@ -1,0 +1,14 @@
+id: rubric-explanation-001
+description: Explain a technical concept and judge quality via multi-criteria rubric
+tags:
+  - regression
+  - rubric
+prompt: "Explain the TLS handshake in 3 sentences."
+system: "You are a technical educator. Explain clearly and accurately."
+evaluators:
+  - type: rubric_judge
+    threshold: 0.6
+    rubric:
+      clarity: "Is the explanation clear and easy to understand for a developer audience?"
+      correctness: "Is the technical content factually accurate?"
+      completeness: "Does the explanation cover the key steps of the TLS handshake?"

@@ -14,13 +14,28 @@ class CliTest {
 
   @TempDir Path tempDir;
 
-  /** Baseline written by mock provider with no model set. Cleaned up around each test. */
+  /** Baseline written by mock provider with no model set. Saved and restored around each test. */
   private static final Path MOCK_BASELINE = Path.of("baselines/mock-unknown.json");
 
+  private byte[] savedBaseline;
+
   @BeforeEach
+  void saveBaseline() throws IOException {
+    if (MOCK_BASELINE.toFile().exists()) {
+      savedBaseline = Files.readAllBytes(MOCK_BASELINE);
+    } else {
+      savedBaseline = null;
+    }
+  }
+
   @AfterEach
-  void cleanUpBaseline() throws IOException {
-    Files.deleteIfExists(MOCK_BASELINE);
+  void restoreBaseline() throws IOException {
+    if (savedBaseline != null) {
+      Files.createDirectories(MOCK_BASELINE.getParent());
+      Files.write(MOCK_BASELINE, savedBaseline);
+    } else {
+      Files.deleteIfExists(MOCK_BASELINE);
+    }
   }
 
   @Test
@@ -34,6 +49,7 @@ class CliTest {
 
   @Test
   void compareBaseline_withNoBaselineFile_returnsOne() throws IOException {
+    Files.deleteIfExists(MOCK_BASELINE);
     Path casesDir = tempDir.resolve("evalcases");
     Files.createDirectories(casesDir);
 

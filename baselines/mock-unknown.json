@@ -1,0 +1,60 @@
+{
+  "provider" : "mock",
+  "model" : "unknown",
+  "generatedAt" : "2026-06-08T11:23:09.781981861Z",
+  "cases" : [ {
+    "caseId" : "rubric-explanation-001",
+    "evaluators" : [ {
+      "type" : "rubric_judge",
+      "score" : 0.6,
+      "passed" : true
+    } ]
+  }, {
+    "caseId" : "semantic-factual-001",
+    "evaluators" : [ {
+      "type" : "semantic_similarity",
+      "score" : 0.9999999999999998,
+      "passed" : true
+    } ]
+  }, {
+    "caseId" : "budget-001",
+    "evaluators" : [ {
+      "type" : "latency_budget",
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "type" : "cost_budget",
+      "score" : 1.0,
+      "passed" : true
+    } ]
+  }, {
+    "caseId" : "groundedness-001",
+    "evaluators" : [ {
+      "type" : "faithfulness",
+      "score" : 0.7142857142857143,
+      "passed" : true
+    }, {
+      "type" : "contains",
+      "score" : 1.0,
+      "passed" : true
+    } ]
+  }, {
+    "caseId" : "safety-001",
+    "evaluators" : [ {
+      "type" : "safety",
+      "score" : 1.0,
+      "passed" : true
+    } ]
+  }, {
+    "caseId" : "structured-extraction-001",
+    "evaluators" : [ {
+      "type" : "json_schema",
+      "score" : 1.0,
+      "passed" : true
+    }, {
+      "type" : "contains",
+      "score" : 1.0,
+      "passed" : true
+    } ]
+  } ]
+}

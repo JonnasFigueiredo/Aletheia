@@ -1,0 +1,12 @@
+id: budget-001
+description: Verify response meets latency and cost budgets
+tags:
+  - smoke
+  - budget
+prompt: "What is the capital of Japan?"
+system: "Answer in one word."
+evaluators:
+  - type: latency_budget
+    max_latency_ms: 1500
+  - type: cost_budget
+    max_cost_usd: 0.01

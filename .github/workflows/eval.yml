@@ -1,0 +1,118 @@
+name: Eval Suite
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *"
+
+concurrency:
+  group: eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mock:
+    name: Mock provider (deterministic)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Run eval suite (mock, baseline enforced)
+        run: mvn -B -Daletheia.baseline.enforce=true verify
+
+      - name: Upload summary artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-summary-${{ github.run_number }}
+          path: |
+            target/aletheia/summary.json
+            target/aletheia/summary.html
+            target/allure-results/
+
+  allure-report:
+    name: Publish Allure report to GitHub Pages
+    needs: mock
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download allure-results artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: eval-summary-${{ github.run_number }}
+          path: allure-input
+
+      - name: Generate Allure HTML report
+        uses: simple-elf/allure-report-action@v1
+        with:
+          allure_results: allure-input/target/allure-results
+          allure_report: allure-report
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: allure-report
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
+
+  real-providers:
+    name: Real providers (${{ matrix.provider }})
+    needs: mock
+    runs-on: ubuntu-latest
+    if: >
+      (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') &&
+      (secrets.OPENAI_API_KEY != '' || secrets.ANTHROPIC_API_KEY != '')
+    continue-on-error: true
+    strategy:
+      matrix:
+        include:
+          - provider: openai-compatible
+            env_provider: openai
+            env_base_url: https://api.openai.com/v1
+            secret_key: OPENAI_API_KEY
+            model: gpt-4o-mini
+          - provider: anthropic
+            env_provider: anthropic
+            env_base_url: ""
+            secret_key: ANTHROPIC_API_KEY
+            model: claude-3-5-haiku-20241022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Run eval suite (${{ matrix.provider }})
+        env:
+          LLM_PROVIDER: ${{ matrix.env_provider }}
+          LLM_BASE_URL: ${{ matrix.env_base_url }}
+          LLM_API_KEY: ${{ secrets[matrix.secret_key] }}
+          LLM_MODEL: ${{ matrix.model }}
+        run: mvn -B -Daletheia.baseline.enforce=false verify
+
+      - name: Upload ${{ matrix.provider }} summary
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-summary-${{ matrix.provider }}-${{ github.run_number }}
+          path: |
+            target/aletheia/summary.json
+            target/aletheia/summary.html

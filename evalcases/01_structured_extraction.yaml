@@ -1,0 +1,30 @@
+id: structured-extraction-001
+description: Extract person details from a paragraph and return strict JSON
+tags:
+  - smoke
+  - structured
+prompt: >
+  Extract the person's details from the following paragraph and return
+  a JSON object with exactly three fields: name, age, and city.
+  Paragraph: "Alice Johnson, 34, recently moved to Boston where she works as a software engineer."
+system: "You are a data extraction assistant. Respond with valid JSON only."
+json_schema:
+  type: object
+  properties:
+    name:
+      type: string
+    age:
+      type: integer
+    city:
+      type: string
+  required:
+    - name
+    - age
+    - city
+  additionalProperties: false
+evaluators:
+  - type: json_schema
+  - type: contains
+    must_include:
+      - "Alice"
+      - "Boston"

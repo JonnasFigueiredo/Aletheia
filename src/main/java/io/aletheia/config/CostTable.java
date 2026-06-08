@@ -68,7 +68,7 @@ public final class CostTable {
    * and {@code tokensOut} output tokens. Unknown models are treated as zero cost.
    */
   public double computeCost(String model, int tokensIn, int tokensOut) {
-    ModelCost mc = costs.getOrDefault(model, ModelCost.ZERO);
+    ModelCost mc = costs.getOrDefault(model != null ? model : "", ModelCost.ZERO);
     return (mc.inputPer1k() * tokensIn + mc.outputPer1k() * tokensOut) / 1000.0;
   }
 
