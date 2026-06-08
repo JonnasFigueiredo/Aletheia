@@ -29,8 +29,7 @@ public final class EvalCaseLoader {
   public static List<EvalCase> loadFromDirectory(Path dir) throws IOException {
     List<EvalCase> cases = new ArrayList<>();
     try (Stream<Path> files = Files.list(dir)) {
-      for (Path file :
-          files.filter(p -> p.getFileName().toString().endsWith(".yaml")).toList()) {
+      for (Path file : files.filter(p -> p.getFileName().toString().endsWith(".yaml")).toList()) {
         cases.add(loadFromFile(file));
       }
     }
@@ -59,11 +58,7 @@ public final class EvalCaseLoader {
     }
     if (evalCase.getEvaluators().isEmpty()) {
       throw new IllegalArgumentException(
-          "EvalCase '"
-              + evalCase.getId()
-              + "' in "
-              + file
-              + " must have at least one evaluator");
+          "EvalCase '" + evalCase.getId() + "' in " + file + " must have at least one evaluator");
     }
   }
 }

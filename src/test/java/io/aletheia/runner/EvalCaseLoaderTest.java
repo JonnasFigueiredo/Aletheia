@@ -28,8 +28,7 @@ class EvalCaseLoaderTest {
         .isEqualTo("Verify that the model can answer a basic factual question");
     assertThat(evalCase.getTags()).containsExactly("factual", "smoke");
     assertThat(evalCase.getPrompt()).isEqualTo("What is the capital of France?");
-    assertThat(evalCase.getSystem())
-        .isEqualTo("You are a helpful assistant. Answer concisely.");
+    assertThat(evalCase.getSystem()).isEqualTo("You are a helpful assistant. Answer concisely.");
     assertThat(evalCase.getContext()).isEqualTo("The question is about European geography.");
     assertThat(evalCase.getProvider()).isEqualTo("openai");
     assertThat(evalCase.getModel()).isEqualTo("gpt-4o-mini");

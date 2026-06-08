@@ -1,0 +1,20 @@
+# Sample mock fixture for Aletheia. THE-9.6 will replace this with the real eval fixture.
+- id: capital-france-001
+  match: capital of France
+  response: "Paris"
+  tokens_in: 12
+  tokens_out: 3
+  latency_ms: 50
+  raw:
+    model: mock-model
+    finish_reason: stop
+
+- id: greeting-001
+  match: Hello
+  response: "Hello! How can I help you today?"
+  tokens_in: 5
+  tokens_out: 9
+  latency_ms: 30
+  raw:
+    model: mock-model
+    finish_reason: stop

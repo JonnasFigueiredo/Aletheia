@@ -11,6 +11,7 @@ public final class LlmRequest {
   private final String model;
   private final double temperature;
   private final int maxTokens;
+  private final String caseId;
 
   private LlmRequest(Builder builder) {
     this.prompt = Objects.requireNonNull(builder.prompt, "prompt must not be null");
@@ -19,6 +20,7 @@ public final class LlmRequest {
     this.model = builder.model;
     this.temperature = builder.temperature;
     this.maxTokens = builder.maxTokens;
+    this.caseId = builder.caseId;
   }
 
   public String getPrompt() {
@@ -45,6 +47,11 @@ public final class LlmRequest {
     return maxTokens;
   }
 
+  /** Optional case identifier used by {@code MockLlmClient} for exact fixture matching. */
+  public String getCaseId() {
+    return caseId;
+  }
+
   public static Builder builder(String prompt) {
     return new Builder(prompt);
   }
@@ -56,6 +63,7 @@ public final class LlmRequest {
     private String model;
     private double temperature = 0.0;
     private int maxTokens = 1024;
+    private String caseId;
 
     private Builder(String prompt) {
       this.prompt = prompt;
@@ -83,6 +91,11 @@ public final class LlmRequest {
 
     public Builder maxTokens(int maxTokens) {
       this.maxTokens = maxTokens;
+      return this;
+    }
+
+    public Builder caseId(String caseId) {
+      this.caseId = caseId;
       return this;
     }
 
