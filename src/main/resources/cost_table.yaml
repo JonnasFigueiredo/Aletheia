@@ -1,0 +1,15 @@
+mock:
+  input_per_1k: 0.0
+  output_per_1k: 0.0
+gpt-4o-mini:
+  input_per_1k: 0.00015
+  output_per_1k: 0.0006
+gpt-4o:
+  input_per_1k: 0.005
+  output_per_1k: 0.015
+claude-3-5-haiku-20241022:
+  input_per_1k: 0.0008
+  output_per_1k: 0.004
+claude-3-5-sonnet-20241022:
+  input_per_1k: 0.003
+  output_per_1k: 0.015
