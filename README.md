@@ -1,6 +1,6 @@
 # Aletheia — Java LLM Evaluation Framework
 
-[![Build](https://github.com/your-org/aletheia/actions/workflows/eval.yml/badge.svg)](https://github.com/your-org/aletheia/actions/workflows/eval.yml)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Java 17](https://img.shields.io/badge/Java-17-blue.svg)](#quick-start)
 
