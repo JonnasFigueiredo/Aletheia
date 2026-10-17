@@ -61,10 +61,19 @@ jobs:
         with:
           name: allure-results-${{ github.run_number }}
           path: allure-input
-      - uses: simple-elf/allure-report-action@v1
+      - uses: actions/setup-java@v4
         with:
-          allure_results: allure-input
-          allure_report: allure-report
+          distribution: temurin
+          java-version: '17'
+      - name: Generate Allure report
+        env:
+          ALLURE_VERSION: '2.46.1'
+          ALLURE_SHA256: '37428164f310c8d137cfdd2c3a25d049b233261ddab13e1bd4dfd7627b5cbf8d'
+        run: |
+          curl --fail --location --retry 3 --output allure.tgz "https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.tgz"
+          echo "${ALLURE_SHA256}  allure.tgz" | sha256sum --check
+          tar -xzf allure.tgz
+          "./allure-${ALLURE_VERSION}/bin/allure" generate allure-input --clean --output allure-report
       - uses: actions/upload-pages-artifact@v3
         with:
           path: allure-report
