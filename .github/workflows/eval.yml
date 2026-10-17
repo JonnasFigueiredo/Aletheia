@@ -1,118 +1,116 @@
 name: Eval Suite
-
 on:
   push:
   pull_request:
   workflow_dispatch:
   schedule:
-    - cron: "0 2 * * *"
-
+    - cron: '0 2 * * *'
+permissions:
+  contents: read
 concurrency:
   group: eval-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   mock:
     name: Mock provider (deterministic)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LLM_PROVIDER: mock
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Java 17 (Temurin)
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
           cache: maven
-
-      - name: Run eval suite (mock, baseline enforced)
+      - name: Verify mock suite and baseline
         run: mvn -B -Daletheia.baseline.enforce=true verify
-
-      - name: Upload summary artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload summaries
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: eval-summary-${{ github.run_number }}
-          path: |
-            target/aletheia/summary.json
-            target/aletheia/summary.html
-            target/allure-results/
-
+          path: target/aletheia/
+          if-no-files-found: error
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-${{ github.run_number }}
+          path: target/allure-results/
+          if-no-files-found: error
   allure-report:
-    name: Publish Allure report to GitHub Pages
+    name: Publish Allure report
     needs: mock
+    if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    timeout-minutes: 10
     permissions:
+      contents: read
       pages: write
       id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Download allure-results artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: eval-summary-${{ github.run_number }}
+          name: allure-results-${{ github.run_number }}
           path: allure-input
-
-      - name: Generate Allure HTML report
-        uses: simple-elf/allure-report-action@v1
+      - uses: simple-elf/allure-report-action@v1
         with:
-          allure_results: allure-input/target/allure-results
+          allure_results: allure-input
           allure_report: allure-report
-
-      - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: allure-report
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-
+      - uses: actions/deploy-pages@v4
+        id: deployment
   real-providers:
-    name: Real providers (${{ matrix.provider }})
+    name: Real provider (${{ matrix.provider }})
     needs: mock
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
-    if: >
-      (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') &&
-      (secrets.OPENAI_API_KEY != '' || secrets.ANTHROPIC_API_KEY != '')
-    continue-on-error: true
+    timeout-minutes: 20
     strategy:
+      fail-fast: false
       matrix:
         include:
-          - provider: openai-compatible
-            env_provider: openai
-            env_base_url: https://api.openai.com/v1
+          - provider: openai
+            base_url: https://api.openai.com/v1
             secret_key: OPENAI_API_KEY
-            model: gpt-4o-mini
+            model_var: OPENAI_MODEL
           - provider: anthropic
-            env_provider: anthropic
-            env_base_url: ""
+            base_url: ''
             secret_key: ANTHROPIC_API_KEY
-            model: claude-3-5-haiku-20241022
+            model_var: ANTHROPIC_MODEL
+    env:
+      LLM_API_KEY: ${{ secrets[matrix.secret_key] }}
+      LLM_MODEL: ${{ vars[matrix.model_var] }}
+      LLM_PROVIDER: ${{ matrix.provider }}
+      LLM_BASE_URL: ${{ matrix.base_url }}
     steps:
+      - name: Explain skipped provider
+        if: env.LLM_API_KEY == '' || env.LLM_MODEL == ''
+        run: echo 'Provider skipped. Configure its API key secret and model repository variable.' >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/checkout@v4
-
-      - name: Set up Java 17 (Temurin)
-        uses: actions/setup-java@v4
+        if: env.LLM_API_KEY != '' && env.LLM_MODEL != ''
+      - uses: actions/setup-java@v4
+        if: env.LLM_API_KEY != '' && env.LLM_MODEL != ''
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
           cache: maven
-
-      - name: Run eval suite (${{ matrix.provider }})
-        env:
-          LLM_PROVIDER: ${{ matrix.env_provider }}
-          LLM_BASE_URL: ${{ matrix.env_base_url }}
-          LLM_API_KEY: ${{ secrets[matrix.secret_key] }}
-          LLM_MODEL: ${{ matrix.model }}
-        run: mvn -B -Daletheia.baseline.enforce=false verify
-
-      - name: Upload ${{ matrix.provider }} summary
-        uses: actions/upload-artifact@v4
-        if: always()
+      - name: Evaluate configured model
+        if: env.LLM_API_KEY != '' && env.LLM_MODEL != ''
+        run: mvn -B -Dtest=AletheiaTestSuite -Daletheia.baseline.enforce=false test
+      - uses: actions/upload-artifact@v4
+        if: always() && env.LLM_API_KEY != '' && env.LLM_MODEL != ''
         with:
-          name: eval-summary-${{ matrix.provider }}-${{ github.run_number }}
-          path: |
-            target/aletheia/summary.json
-            target/aletheia/summary.html
+          name: eval-${{ matrix.provider }}-${{ github.run_number }}
+          path: target/aletheia/
+          if-no-files-found: warn

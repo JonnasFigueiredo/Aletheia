@@ -41,15 +41,15 @@ class AletheiaBaselineTest {
 
     String casesDir = System.getProperty(CASES_DIR_PROP, "evalcases");
     Path dir = Path.of(casesDir);
-    assumeTrue(Files.isDirectory(dir), "Cases directory does not exist: " + dir);
+    assertTrue(Files.isDirectory(dir), "Cases directory does not exist: " + dir);
 
     List<EvalCase> cases = EvalCaseLoader.loadFromDirectory(dir);
-    assumeTrue(!cases.isEmpty(), "No eval cases found in " + dir);
+    assertTrue(!cases.isEmpty(), "No eval cases found in " + dir);
 
     RunSummary current = EvalRunner.runSuite(cases, client, cfg);
     Path baselinePath = BaselineStore.defaultPath(current.getProvider(), current.getModel());
 
-    assumeTrue(
+    assertTrue(
         baselinePath.toFile().exists(),
         "No baseline found at " + baselinePath + "; run record-baseline first");
 

@@ -4,17 +4,15 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Java 17](https://img.shields.io/badge/Java-17-blue.svg)](#quick-start)
 
-LLMs are non-deterministic — how do you test them? Aletheia is a deterministic, provider-agnostic
-Java testing framework for LLMs. It runs a suite of structured eval cases against a mock client
-(zero API cost, zero flakiness), compares scores against a committed baseline snapshot, and fails
-the build when quality regresses. Switch to a real provider for any case by setting two environment
-variables.
+LLMs are non-deterministic — how do you test them? Aletheia is a provider-agnostic Java testing framework for LLMs with a deterministic mock mode. It runs a suite of structured eval cases against a mock client
+(zero API cost, fixed responses), compares scores against a committed baseline snapshot, and fails
+the build when quality regresses. Switch to a real provider for any case by configuring the provider environment variables below.
 
 ## Why Aletheia
 
 | Problem | Solution |
 |---|---|
-| LLMs produce different outputs on every call | Temperature 0 + deterministic mock fixtures for CI |
+| LLMs produce different outputs on every call | Deterministic mock fixtures for CI; real providers may vary even at temperature 0 |
 | "Did my prompt change hurt quality?" | Baseline snapshots catch silent regressions across evaluators |
 | Every evaluator is a one-off script | Composable evaluator interface — mix JSON schema, semantic similarity, rubric judges, safety checks |
 | CI costs money | Mock provider runs for free; real-provider runs are opt-in (nightly/manual) |
@@ -24,8 +22,8 @@ variables.
 No API key required:
 
 ```bash
-git clone https://github.com/your-org/aletheia.git
-cd aletheia
+git clone https://github.com/JonnasFigueiredo/Aletheia.git
+cd Aletheia
 mvn verify
 ```
 
@@ -52,7 +50,7 @@ providers.
 | `LLM_BASE_URL` | _(none)_ | Base URL for OpenAI-compatible APIs |
 | `LLM_API_KEY` | _(none)_ | API key for the selected provider |
 | `LLM_MODEL` | _(none)_ | Model identifier |
-| `ALETHEIA_TEMPERATURE` | `0` | Sampling temperature (0 = deterministic) |
+| `ALETHEIA_TEMPERATURE` | `0` | Sampling temperature (0 reduces sampling variation; not a determinism guarantee) |
 | `ALETHEIA_FIXTURE_PATH` | `fixtures/mock-responses.yaml` | Path to mock fixture file |
 | `LLM_TIMEOUT_SECONDS` | `30` | HTTP timeout for real providers |
 
@@ -226,7 +224,7 @@ evaluators:
 
 After `mvn verify`, open `target/aletheia/summary.html` in a browser for a per-case pass/fail
 table with scores, latency, and cost. The Allure report is published to GitHub Pages on every push
-to `main`.
+to the default branch, once GitHub Pages is configured to use GitHub Actions.
 
 ## Roadmap
 
@@ -239,3 +237,7 @@ to `main`.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Releases
+
+See [versioning and release validation](docs/RELEASING.md).

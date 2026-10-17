@@ -19,7 +19,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <!-- Pass-through properties for eval system — overridden via -D on the command line. -->
-    <aletheia.baseline.enforce>false</aletheia.baseline.enforce>
+    <aletheia.baseline.enforce>true</aletheia.baseline.enforce>
     <aletheia.cases.dir>evalcases</aletheia.cases.dir>
 
     <!-- Dependencies -->
@@ -148,6 +148,9 @@
         <version>${surefire.version}</version>
         <configuration>
           <argLine>-javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar -Daletheia.baseline.enforce=${aletheia.baseline.enforce} -Daletheia.cases.dir=${aletheia.cases.dir}</argLine>
+          <systemPropertyVariables>
+            <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+          </systemPropertyVariables>
           <includes>
             <include>**/*Test.java</include>
             <include>**/Test*.java</include>
@@ -188,13 +191,6 @@
           </java>
         </configuration>
         <executions>
-          <execution>
-            <id>spotless-apply</id>
-            <phase>process-sources</phase>
-            <goals>
-              <goal>apply</goal>
-            </goals>
-          </execution>
           <execution>
             <id>spotless-check</id>
             <phase>verify</phase>
